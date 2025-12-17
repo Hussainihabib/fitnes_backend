@@ -1,7 +1,4 @@
-
 import User from "../models/User.js";
-import fs from "fs";
-import path from "path";
 
 export const getUserProfile = async (req, res) => {
   try {
@@ -30,8 +27,9 @@ export const updateUserProfile = async (req, res) => {
       user.email = email;
     }
 
-    if (req.file) {
-      user.profilePicture = `uploads/${req.file.filename}`;
+    // ✅ CLOUDINARY FIX
+    if (req.file && req.file.path) {
+      user.profilePicture = req.file.path; // Cloudinary URL
     }
 
     const updatedUser = await user.save();
@@ -40,9 +38,9 @@ export const updateUserProfile = async (req, res) => {
     delete sendUser.password;
 
     res.json(sendUser);
-
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("Profile update error:", err);
+    res.status(500).json({ message: "Profile update failed" });
   }
 };
 
@@ -59,13 +57,19 @@ export const updateSettings = async (req, res) => {
 
     user.settings = {
       ...user.settings,
-      ...req.body.settings
+      ...req.body.settings,
     };
 
     await user.save();
 
-    res.json({ message: "Settings updated successfully", settings: user.settings });
+    res.json({
+      message: "Settings updated successfully",
+      settings: user.settings,
+    });
   } catch (err) {
-    res.status(500).json({ message: "Settings update error", error: err.message });
+    res.status(500).json({
+      message: "Settings update error",
+      error: err.message,
+    });
   }
 };
